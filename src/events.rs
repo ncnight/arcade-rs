@@ -1,0 +1,44 @@
+use sdl2::EventPump;
+
+pub struct Events {
+    pump: EventPump,
+
+    pub quit: bool,
+    pub key_escape: bool,
+}
+
+impl Events {
+    pub fn new(pump: EventPump) -> Events {
+        Events {
+            pump: pump,
+
+            quit: false,
+            key_escape: false,
+        }
+    }
+
+    //update record
+    pub fn pump(&mut self) {
+        //sdl_context dropped then poll_iter() wont yield input
+        for event in self.pump.poll_iter() {
+            use sdl2::event::Event::*;
+            use sdl2::keyboard::Keycode::*;
+
+            match event {
+                Quit {..} => self.quit = true,
+
+                KeyDown {keycode, ..} => match keycode {
+                    Some(Escape) => self.key_escape = true,
+                    _ => {}
+                },
+
+                KeyUp {keycode, ..} => match keycode {
+                    Some(Escape) => self.key_escape = true,
+                    _ => {}
+                },
+
+                _ => {}
+            }
+        }
+    }
+}
