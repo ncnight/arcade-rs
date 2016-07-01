@@ -1,43 +1,90 @@
-use sdl2::EventPump;
+macro_rules! struct_events {
+    ( keyboard: { $( $k_alias:ident : $k_sdl:ident), * },
+    //match against a pattern
+    else: { $( $e_alias:ident : $e_sdl:pat), *}
+    ) =>  {
+        use sdl2::EventPump;
 
-pub struct Events {
-    pump: EventPump,
-
-    pub quit: bool,
-    pub key_escape: bool,
-}
-
-impl Events {
-    pub fn new(pump: EventPump) -> Events {
-        Events {
-            pump: pump,
-
-            quit: false,
-            key_escape: false,
+        pub struct ImmediateEvents {
+            $( pub $k_alias: Option<bool>, ), *
+            $( pub $e_alias: bool), *
         }
-    }
 
-    //update record
-    pub fn pump(&mut self) {
-        //sdl_context dropped then poll_iter() wont yield input
-        for event in self.pump.poll_iter() {
-            use sdl2::event::Event::*;
-            use sdl2::keyboard::Keycode::*;
+        impl ImmediateEvents {
+            pub fn new() -> ImmediateEvents {
+                ImmediateEvents {
+                    $( $k_alias: None,), *
+                    $( $e_alias: false),*
+                }
+            }
+        }
 
-            match event {
-                Quit {..} => self.quit = true,
+        pub struct Events {
+            pump: EventPump,
+            pub now: ImmediateEvents,
 
-                KeyDown {keycode, ..} => match keycode {
-                    Some(Escape) => self.key_escape = true,
-                    _ => {}
-                },
+            // true = pressed
+            // false = not pressed
+            $( pub $k_alias: bool,), *
+            $( pub $e_alias: bool), *
+        }
 
-                KeyUp {keycode, ..} => match keycode {
-                    Some(Escape) => self.key_escape = true,
-                    _ => {}
-                },
+        impl Events {
+            pub fn new(pump: EventPump) -> Events {
+                Events {
+                    pump: pump,
+                    now: ImmediateEvents::new(),
 
-                _ => {}
+                    $( $k_alias: false,),*
+                    $( $e_alias: false),*
+                }
+            }
+
+            //update record
+            pub fn pump(&mut self) {
+                self.now = ImmediateEvents::new();
+                //sdl_context dropped then poll_iter() wont yield input
+                for event in self.pump.poll_iter() {
+                    use sdl2::event::Event::*;
+                    use sdl2::keyboard::Keycode::*;
+
+                    match event {
+                        KeyDown {keycode, ..} => match keycode {
+                            $(
+                                Some($k_sdl) => {
+                                    //prevent multiple presses
+                                    //checks if previously pressed
+                                    if !self.$k_alias {
+                                        //pressed
+                                        self.now.$k_alias = Some(true);
+                                    }
+                                    self.$k_alias = true;
+                                }
+                            ),*
+
+                            _ => {}
+                        },
+
+                        KeyUp{keycode, ..} => match keycode {
+                            $(
+                                Some($k_sdl) => {
+                                    //released
+                                    self.now.$k_alias = Some(false);
+                                    self.$k_alias = false;
+                                }
+                            ),*
+                            _=>{}
+                        },
+
+                        $(
+                            $e_sdl => {
+                                self.now.$e_alias = true;
+                            }
+                        )*,
+
+                        _ => {}
+                    }
+                }
             }
         }
     }
