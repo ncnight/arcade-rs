@@ -6,14 +6,14 @@ macro_rules! struct_events {
         use sdl2::EventPump;
 
         pub struct ImmediateEvents {
-            $( pub $k_alias: Option<bool>, ), *
+            $( pub $k_alias: Option<bool>, ) *
             $( pub $e_alias: bool), *
         }
 
         impl ImmediateEvents {
             pub fn new() -> ImmediateEvents {
                 ImmediateEvents {
-                    $( $k_alias: None,), *
+                    $( $k_alias: None,)*
                     $( $e_alias: false),*
                 }
             }
@@ -25,7 +25,7 @@ macro_rules! struct_events {
 
             // true = pressed
             // false = not pressed
-            $( pub $k_alias: bool,), *
+            $( pub $k_alias: bool,)*
             $( pub $e_alias: bool), *
         }
 
@@ -35,7 +35,7 @@ macro_rules! struct_events {
                     pump: pump,
                     now: ImmediateEvents::new(),
 
-                    $( $k_alias: false,),*
+                    $( $k_alias: false,)*
                     $( $e_alias: false),*
                 }
             }
