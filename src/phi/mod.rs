@@ -4,12 +4,13 @@ mod events;
 
 use sdl2::render::Renderer;
 
-
 struct_events!(
     keyboard: {
         key_escape: Escape,
         key_up: Up,
         key_down: Down,
+        key_left: Left,
+        key_right: Right,
         key_space: Space
     },
     else: {
@@ -66,7 +67,7 @@ pub fn spawn<F>(title: &str, init: F)
             //frame timing
             let now = timer.ticks();
             let dt = now - before;
-    //NOT SURE WHY IT HAS THIS HERE dead code        let elapsed = dt as f64 / 1_000.0;
+            let elapsed = dt as f64 / 1_000.0;
 
             //fps cap
             if dt < interval {
