@@ -1,6 +1,9 @@
 
+
 #[macro_use]
 mod events;
+pub mod data;
+
 
 use sdl2::render::Renderer;
 
@@ -21,7 +24,14 @@ struct_events!(
 
 pub struct Phi<'window>{
     pub events: Events,
-    pub render: Renderer<'window>,
+    pub renderer: Renderer<'window>,
+}
+
+impl <'window> Phi<'window> {
+    pub fn output_size(&self) -> (f64, f64) {
+        let (w, h) = self.renderer.output_size().unwrap();
+        (w as f64, h as f64)
+    }
 }
 
 pub enum ViewAction {
@@ -45,13 +55,14 @@ pub fn spawn<F>(title: &str, init: F)
         let mut timer = sdl_context.timer().unwrap();
 
         //window
-        let window = video.window(title, 800, 600).position_centered().opengl().build().unwrap();
+        let window = video.window(title, 800, 600).position_centered().opengl().resizable().build().unwrap();
 
         let mut context = Phi{
             //events record
             events: Events::new(sdl_context.event_pump().unwrap()),
-            render: window.renderer().accelerated().build().unwrap(),
+            renderer: window.renderer().accelerated().build().unwrap(),
         };
+
 
         //DefaultView
         let mut current_view = init(&mut context);
@@ -86,10 +97,10 @@ pub fn spawn<F>(title: &str, init: F)
 
             //logic & renders
 
-            context.events.pump();
+            context.events.pump(&mut context.renderer);
 
             match current_view.render(&mut context, 0.01) {
-                ViewAction::None => context.render.present(),
+                ViewAction::None => context.renderer.present(),
                 ViewAction::Quit => break,
                 ViewAction::ChangeView(new_view) =>
                     current_view = new_view,
