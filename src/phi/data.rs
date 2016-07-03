@@ -1,4 +1,4 @@
-use sdl2::rect::Rect as SdlRect;
+use sdl2::rect::Rect;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Rectangle {
@@ -10,10 +10,10 @@ pub struct Rectangle {
 
 impl Rectangle {
     ///Sdl equivalent to self
-    pub fn to_sdl(self) -> Option<SdlRect> {
+    pub fn to_sdl(self) -> Option<Rect> {
         //no negs
         assert!(self.w >= 0.0 && self.h >= 0.0);
-        SdlRect::new(self.x as i32, self.y as i32, self.w as u32, self.h as u32).unwrap()
+        Some(Rect::new(self.x as i32, self.y as i32, self.w as u32, self.h as u32))
     }
 
     //a moved rectangle is returned
