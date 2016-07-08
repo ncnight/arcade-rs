@@ -1,5 +1,3 @@
-
-
 #[macro_use]
 mod events;
 pub mod data;
@@ -72,7 +70,7 @@ pub fn spawn<F>(title: &str, init: F)
         let mut current_view = init(&mut context);
 
         //frames
-        let interval = 1_000 /60;
+        let interval = 1_000/60 ;
         let mut before = timer.ticks();
         let mut last_second = timer.ticks();
         let mut fps = 0u16;
