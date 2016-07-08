@@ -1,17 +1,29 @@
 use phi::{Phi, View, ViewAction};
 use phi::data::Rectangle;
-use std::path::Path;
 use sdl2::pixels::Color;
-use sdl2::render::{Texture, TextureQuery,};
-use sdl2_image::LoadTexture;
+use phi::gfx::{CopySprite, Sprite};
 
 const PLAYER_SPEED: f64 = 180.0;
+const SHIP_W: f64 = 43.0;
+const SHIP_H: f64 = 39.0;
 
-
+#[derive(Clone, Copy)]
+enum ShipFrame { //N = normal, F = fast, S = slow
+    UpN = 0,
+    UpF = 1,
+    UpS = 2,
+    MidN = 3,
+    MidF = 4,
+    MidS = 5,
+    DownN = 6,
+    DownF = 7,
+    DownS = 8,
+}
 
 struct Ship {
         rect: Rectangle,
-        tex: Texture,
+        sprites: Vec<Sprite>,
+        current: ShipFrame,
 }
 
 
@@ -22,10 +34,19 @@ pub struct ShipView{
 impl ShipView {
     pub fn new(phi: &mut Phi) -> ShipView {
         //find ship
-        let tex = phi.renderer.load_texture(Path::new("assests/spaceship.png")).unwrap();
+        let spritesheet = Sprite::load(&mut phi.renderer, "assets/spaceship.png").unwrap();
+        let mut sprites = Vec::with_capacity(9);
 
-        //destructure properties of the Texture
-        let TextureQuery{width, height, ..} = tex.query();
+        for y in 0..3 {
+            for x in 0..3 {
+                sprites.push(spritesheet.region(Rectangle {
+                    w: SHIP_W,
+                    h: SHIP_H,
+                    x: SHIP_W * x as f64,
+                    y: SHIP_H * y as f64,
+                    }).unwrap());
+            }
+        }
 
         //construct ship
         ShipView {
@@ -33,10 +54,11 @@ impl ShipView {
                 rect: Rectangle {
                     x: 64.0,
                     y: 64.0,
-                    w: 32.0,
-                    h: 32.0,
+                    w: SHIP_W,
+                    h: SHIP_H,
                 },
-                tex: tex,
+                sprites: sprites,
+                current: ShipFrame::MidN,
             }
         }
     }
@@ -80,6 +102,19 @@ impl View for ShipView {
         //if cant fill abort
         self.player.rect = self.player.rect.move_inside(movable_region).unwrap();
 
+        //right sprite
+        self.player.current =
+            if dx == 0.0 && dy < 0.0 {ShipFrame::UpN}
+            else if dx > 0.0 && dy < 0.0 {ShipFrame::UpF}
+            else if dx < 0.0 && dy < 0.0 {ShipFrame::UpS}
+            else if dx == 0.0 && dy == 0.0 {ShipFrame::MidN}
+            else if dx > 0.0 && dy == 0.0 {ShipFrame::MidF}
+            else if dx < 0.0 && dy == 0.0 {ShipFrame::MidS}
+            else if dx == 0.0 && dy > 0.0 {ShipFrame::DownN}
+            else if dx > 0.0 && dy > 0.0 {ShipFrame::DownF}
+            else if dx < 0.0 && dy > 0.0 {ShipFrame::DownS}
+            else {unreachable!()};
+
         //logic
         phi.renderer.set_draw_color(Color::RGB(0,0,0));
         phi.renderer.clear(); //clear screen
@@ -88,14 +123,8 @@ impl View for ShipView {
         phi.renderer.set_draw_color(Color::RGB(200,200,50));
         phi.renderer.fill_rect(self.player.rect.to_sdl().unwrap());
 
-        //render ship
-        phi.renderer.copy(&mut self.player.tex, Rectangle{
-            x: 0.0,
-            y: 0.0,
-            w: self.player.rect.w,
-            h: self.player.rect.h,
-        }.to_sdl(), self.player.rect.to_sdl());
-
+        //render
+        phi.renderer.copy_sprite(&self.player.sprites[self.player.current as usize], self.player.rect);
 
         ViewAction::None
 

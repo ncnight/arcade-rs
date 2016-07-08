@@ -3,7 +3,7 @@
 #[macro_use]
 mod events;
 pub mod data;
-
+pub mod gfx;
 
 use sdl2::render::Renderer;
 
