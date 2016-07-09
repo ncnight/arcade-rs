@@ -6,3 +6,4 @@ authors = ["Nithin Chalapathi <nithin.ch10@gmail.com"]
 [dependencies]
 sdl2 = "0.16.0"
 sdl2_image = "0.16.0"
+sdl2_ttf = "0.13.1"

@@ -59,6 +59,8 @@ pub fn spawn<F>(title: &str, init: F)
         let video = sdl_context.video().unwrap();
         let mut timer = sdl_context.timer().unwrap();
         let _image_context = ::sdl2_image::init(::sdl2_image::INIT_PNG).unwrap();
+        let _ttf_context = ::sdl2_ttf::init().unwrap();
+
         //window
         let window = video.window(title, 800, 600).position_centered().opengl().resizable().build().unwrap();
 
